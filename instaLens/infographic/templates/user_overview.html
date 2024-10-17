@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사용자 개요</title>
+</head>
+<body>
+    <h1>사용자 개요</h1>
+
+    <h2>사용자 목록</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>사용자 인스타 아이디</th>
+                <th>크롤링 날짜</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.user_account }}</td>
+                <td>{{ user.created_at }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>친구 목록</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>번호</th>
+                <th>친구 아이디</th>
+                <th>사용자 인스타 아이디</th>
+                <th>팔로잉 여부</th>
+                <th>팔로워 여부</th>
+                <th>좋아요 횟수</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for friendship in friendships %}
+            <tr>
+                <td>{{ forloop.counter }}</td>  <!-- 번호 추가 -->
+                <td>{{ friendship.insta_id }}</td>
+                <td>{{ friendship.user_account.user_account }}</td>
+                <td>{{ friendship.is_following }}</td>
+                <td>{{ friendship.is_follower }}</td>
+                <td>{{ friendship.liked_count }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

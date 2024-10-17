@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Insta-Lens{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/bootstrap-icons.css' %}">
+    <link rel="stylesheet" href="{% static 'css/apexcharts.css' %}">
+    <link rel="stylesheet" href="{% static 'css/tooplate-mini-finance.css' %}">
+    <link rel="stylesheet" href="{% static 'font/bootstrap-icons.woff' %}">
+    <link rel="stylesheet" href="{% static 'font/bootstrap-icons.woff2' %}">
+</head>
+<body>
+    {% block content %}
+    {% endblock %}
+    <!-- JS 파일은 body 태그 끝에 추가 -->
+    <script src="{% static 'js/jquery.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'js/apexcharts.min.js' %}"></script>
+    <script src="{% static 'js/custom.js' %}"></script>
+</body>
+</html>

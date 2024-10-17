@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% block title %}Insta-Lens{% endblock %}
+{% block content %}
+{% load static %}  
+<!--
+Used Tooplate 2135 Mini Finance
+https://www.tooplate.com/view/2135-mini-finance
+-->
+<style>
+    th{
+            text-align: center;
+        }
+        h5{
+            text-align: center;
+        }
+</style>
+    </head>
+    
+    <body>
+        <header class="navbar sticky-top flex-md-nowrap">
+            <div class="col-md-3 col-lg-3 me-0 px-3 fs-6">
+                <a class="navbar-brand" href="">
+                    <img src="{% static 'images/logo.png' %}" class="img-fluid" width="35" height="35" alt="">
+                    5sTeam
+                </a>
+            </div>
+        </header>
+
+        <div class="container-fluid">
+            <div class="row">
+                <nav id="sidebarMenu" class="col-md-3 col-lg-3 d-md-block sidebar collapse">
+                    <div class="position-sticky py-4 px-3 sidebar-sticky">
+                        <ul class="nav flex-column h-100">
+                            <li class="nav-item">
+                                <a class="nav-link" aria-current="page" href="{% url 'infographic:input' %}">
+                                    <i class="bi-house-fill me-2"></i>
+                                    Welcome
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                {% if user_account %}
+                                <a class="nav-link" href="{% url 'infographic:find_unfollow_list' user_account %}">
+                                    <i class="bi-person me-2"></i>
+                                    Follow Tracker
+                                </a>
+                                {% else %}
+                                    <a class="nav-link" href="">
+                                        <i class="bi-person me-2"></i>
+                                        Follow Tracker
+                                    </a>
+                                {% endif %}
+                            </li>
+
+                            <li class="nav-item">
+                                {% if user_account %}
+                                <a class="nav-link active" href="{% url 'infographic:show_liked_stats' user_account %}">
+                                    <i class="bi-heart-fill me-2"></i>
+                                    Like Stats
+                                </a>
+                                {% else %}
+                                    <a class="nav-link" href="">
+                                        <i class="bi-heart-fill me-2"></i>
+                                        Like Stats
+                                    </a>
+                                {% endif %}
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+
+                <main class="main-wrapper col-md-9 ms-sm-auto py-4 col-lg-9 px-md-4 border-start">
+                    <div class="title-group mb-3">
+                        <h1 class="h1 mb-0">Like Statistic Result</h1>
+                        <!-- {% if message %}
+                            <h6 style="color:red">{{message}}</h6>
+                        {% else %}
+                            <small class="text-muted">Analyzed recent 10 posts</small>
+                        {% endif %}-->
+                    </div>
+
+                    <div class="row my-4">
+                        <div class="col-lg-12">
+                            <div class="custom-block bg-white">
+                                <div class="tab-content" id="myTabContent">
+                                    <div class="tab-pane fade show active" id="profile-tab-pane" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
+                                        <h6 class="mb-4">Title</h6>
+                                        <!-- 시각화 차트 -->
+                                        <div>
+                                            <h5>좋아요 비율 분석</h5>
+                                            <table>
+                                                <th>팔로잉 중에 좋아요 눌러주는 사람, 안눌러주는 사람 파이 차트</th>
+                                                <th>팔로워 중에 좋아요 눌러주는 사람, 안눌러주는 사람 파이 차트
+                                                </th>
+                                                <tr>
+                                                    <td><img class = "graph_img" src="{{ liked_following_url }}" alt="vendiagram" width="90%" height="auto"></td>
+                                                    <td><img class = "graph_img" src="{{ liked_follower_url }}" alt="vendiagram" width="90%" height="auto"></td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <footer class="site-footer">
+                        <div class="container">
+                            <div class="row">
+                                
+                                <div class="col-lg-12 col-12">
+                                    <p class="copyright-text">Templete Copyright © Mini Finance 2048 
+                                    - Design: <a rel="sponsored" href="https://www.tooplate.com" target="_blank">Tooplate</a></p>
+                                </div>
+
+                            </div>
+                        </div>
+                    </footer>
+                </main>
+
+            </div>
+        </div>
+    </body>
+</html>
+{% endblock %}
