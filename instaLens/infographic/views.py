@@ -1,57 +1,51 @@
-from django.shortcuts import render
-from django.http import HttpResponseRedirect
-from django.urls import reverse
-from .models import User, Friendships
-from .insta_tracker import get_data #크롤러 import
-from django.utils import timezone
-import matplotlib.pyplot as plt
-import seaborn as sns
-import pandas as pd
-# 추가
 import io
 import os
-import base64
-import numpy as np
-from selenium import webdriver
-from django.conf import settings
-from selenium.webdriver.chrome.options import Options
-from matplotlib_venn import venn2
-import matplotlib
 
-# Create your views here.
-def getInput(request):
-    #submit 버튼 누르면 loading page로 넘어가는 함수
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from django.conf import settings
+from django.http import HttpResponseRedirect, HttpResponse, HttpRequest
+from django.shortcuts import render
+from django.urls import reverse
+from django.utils import timezone
+from matplotlib_venn import venn2
+
+from .insta_tracker import get_data  # 크롤러 import
+from .models import User, Friendships
+
+
+def getInput(request: HttpRequest) -> HttpResponse:
     message = ""
     user_account = ""
     if request.method == 'POST':
         user_account = request.POST.get('username')
         if user_account:
-            #return HttpResponseRedirect(reverse('infographic:crawling_loading', args=[user_account]))
             return HttpResponseRedirect(reverse('infographic:crawled', args=[user_account]))
-            #return render(request, 'account_input.html', {'user_account': user_account})
         else:
             message = "계정 이름을 입력하세요."
     return render(request, 'account_input.html', {'message': message, 'user_account':user_account})
 
-def crawled(request, user_account):
+def crawled(request: HttpRequest, user_account: str) -> HttpResponse:
     # 인스타그램 임시 로그인 아이디 정보
     username = ""
     password = ""
-    
-    # 크롤링된 데이터 받아오기
-    message = []
+
+    failure_message = []
     '''
     liked_users(dict) - {key : friend name}, {value : 좋아요 수}
     followers(list) - friend name
     followings(list) - friend name
     '''
     try:
-        liked_users, followers, followings = get_data(username, password, user_account) or ({}, {}, {}) #크롤링 실행
+        liked_users, followers, followings = get_data(username, password, user_account) or ({}, {}, {})
     except Exception as e:
-        message.append(f"크롤링 중 오류 발생\n세부 오류 내용: {str(e)}")
-        return render(request, 'crawled_result.html', {'message': message})
-    # 데이터 베이스에 저장
+        failure_message.append(f"크롤링 중 오류 발생\n세부 오류 내용: {str(e)}")
+        return render(request, 'crawled_result.html', {'message': failure_message})
     '''
+    >> ???? models.py에 정의되어 있는거 아닌가요?
+    
     DB 구조
     [User]
     - user_account (사용자 인스타 아이디)
@@ -64,15 +58,13 @@ def crawled(request, user_account):
     - liked_count (좋아요 횟수)
     - created_at (크롤링 날짜)
     '''
-    # 사용자 정보 저장
     user, created = User.objects.update_or_create(
         user_account = user_account,
         defaults= {
             'created_at': timezone.now()
                   }
         )
-    #print(f"User model created or updated: {created}")
-    # 친구 데이터 저장
+
     if liked_users:
         for insta_id, liked_count in liked_users.items():
             is_follower = insta_id in followers
@@ -87,9 +79,8 @@ def crawled(request, user_account):
                     created_at = user.created_at
                 )
     else:
-        message.append("게시글이 없습니다. 따라서 Like Stats 내용이 없을 수 있습니다.")
+        failure_message.append("게시글이 없습니다. 따라서 Like Stats 내용이 없을 수 있습니다.")
 
-    # liked_users에 없는 경우 처리
     all_instas = followers.union(followings)  # followers와 followings의 모든 insta_id
     if all_instas:
         print(f"Total Insta ID to check: {len(all_instas)}")
@@ -107,9 +98,9 @@ def crawled(request, user_account):
                     created_at = user.created_at
                 )
     else:
-        message.append('팔로워나 팔로잉이 없습니다. Follow Tracker 나 Like Stats 내용이 없을 수 있습니다.')
-    message.append("크롤링이 완료되었습니다. Follow Tracker 나 Like Stats 탭을 확인해보세요")
-    return render(request, 'crawled_result.html', {'message': message, 'user_account': user_account})
+        failure_message.append('팔로워나 팔로잉이 없습니다. Follow Tracker 나 Like Stats 내용이 없을 수 있습니다.')
+    failure_message.append("크롤링이 완료되었습니다. Follow Tracker 나 Like Stats 탭을 확인해보세요")
+    return render(request, 'crawled_result.html', {'message': failure_message, 'user_account': user_account})
 
 def crawling_loading(request, user_account):
     # 크롤링 없이 랜딩 페이지 테스트 함수

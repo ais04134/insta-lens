@@ -1,48 +1,39 @@
+import time
+
 from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.chrome.options import Options
-from selenium.common.exceptions import NoSuchElementException
-import time
+from selenium.webdriver.support.ui import WebDriverWait
+from webdriver_manager.chrome import ChromeDriverManager
 
 
 def get_data(username, password, user_account):
-    # 드라이버 초기화 및 로그인
     driver = init_driver()
     insta_login(driver, username, password)
 
-    # 사용자 계정 검색
     insta_search_user(driver, user_account)
     # TODO: 검색할 계정에 있는 게시물 수 확인
     contents_num = 10 #해당 계정 게시물 수 몇 개 있는지에 따라 제한 필요
-    
-    # 최근 게시물에서 좋아요한 사용자 목록 가져오기  
+
     liked_users = get_likes(driver, contents_num, user_account)
-    
-    # 팔로워 set 가져오기 
-    followers = get_followers(driver, user_account)
+    followers = get_action(driver, user_account, "followers")
+    followings = get_action(driver, user_account, "following")
 
-    # 팔로잉 set 가져오기
-    followings = get_following(driver, user_account)
-
-    # 완료 후 드라이버 종료
     time.sleep(5)  # 확인용 대기
     driver.quit()  # 드라이버 종료
 
     return liked_users, followers, followings
 
-# Chrome 드라이버 초기화 및 설정
 def init_driver():
     chrome_options = Options()
     chrome_options.add_argument("user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36")
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
     return driver
 
-# 인스타그램 로그인
 def insta_login(driver, username, password):
     driver.get('https://www.instagram.com/accounts/login/')
     
@@ -64,79 +55,26 @@ def insta_search_user(driver, user_account):
     driver.get(profile_url)
     time.sleep(10)  # 프로필 로드 대기
 
-
-# 팔로워 리스트 가져오기
-def get_followers(driver, target_username):
-    driver.get(f'https://www.instagram.com/{target_username}/')
-    time.sleep(5)
-
-    # 추천 부분 확인을 위해 친구 숫자 카운트
-    friend_count_element = driver.find_elements(By.XPATH, '//span[contains(@class, "html-span xdj266r x11i5rnm xat24cr x1mh8g0r xexx8yu x4uap5 x18d9i69 xkhd6sd x1hl2dhg x16tdsg8 x1vvkbs")]')
-    element = friend_count_element[1]
-    if element.text.isdigit():
-        friend_count = int(element.text)
-        if friend_count == 0: # 팔로워가 0이라서 버튼이 활성화되지 않는 경우 처리
-            return set()
-        else:
-            followers_button_exists = True
-            try:
-                followers_button = driver.find_element(By.XPATH, "//a[contains(@href,'/followers')]")
-            except NoSuchElementException:
-                followers_button_exists = False
-
-            if followers_button_exists:
-                followers_button.click()
-            else:
-                return set()
-    else:
-        friend_count = -1
-    #print(f"Follower No: {friend_count}")
-
-    time.sleep(5)
-    followers = list()
-    scroll_box = driver.find_element(By.XPATH, "//div[@role='dialog']//div[@class='xyi19xy x1ccrb07 xtf3nb5 x1pc53ja x1lliihq x1iyjqo2 xs83m0k xz65tgg x1rife3k x1n2onr6']")
-    last_height, height = 0, 1
-    while True:
-        last_height = height
-        time.sleep(2)
-        height = driver.execute_script(
-            "arguments[0].scrollTop = arguments[0].scrollHeight; return arguments[0].scrollHeight;", scroll_box)
-        links = scroll_box.find_elements(By.TAG_NAME, 'a')
-        followers.extend([link.text for link in links if link.text != ''])
-        # 스크롤 높이가 더 이상 변하지 않으면 반복문 종료
-        if last_height == height:
-            scroll_attempts += 1
-            if scroll_attempts >= 2:  # 3번 연속 실패 시 종료
-                break
-        else:
-            scroll_attempts = 0  # 높이가 변하면 시도 횟수 초기화
-
-
-    # 팔로워 수가 20보다 적으면 중복 제거하고 friend_count만큼만 살리기
-    if friend_count > 0 and friend_count <= 20:
-        # for loop으로 중복 잘라내기
-        unique_followers = []
-        for follower in followers:
-            if follower not in unique_followers:
-                unique_followers.append(follower)
-            if len(unique_followers) == friend_count:
-                break
-        return set(unique_followers)          
-        # if friend_count == -1:#친구수가 숫자로 표기되지 않는경우
-        #     return unique_followers[:]
-        # else:
-        #     return unique_followers[:friend_count]
-    else:
-        # 20 이상일시 세트로 변환 중복 제거 후 반환
-        return set(followers)
-
 # 팔로잉 리스트 가져오기
-def get_following(driver, target_username):
+def get_action_xpath(action_name: str) -> str:
+    """
+    blabla
+
+    :param action_name:
+    :return:
+    """
+    return {
+        "following": '//span[contains(@class, "html-span xdj266r x11i5rnm xat24cr x1mh8g0r xexx8yu x4uap5 x18d9i69 xkhd6sd x1hl2dhg x16tdsg8 x1vvkbs")]',
+        "followers": '//span[contains(@class, "html-span xdj266r x11i5rnm xat24cr x1mh8g0r xexx8yu x4uap5 x18d9i69 xkhd6sd x1hl2dhg x16tdsg8 x1vvkbs")]'
+    }[action_name]
+
+def get_action(driver, target_username, action_name):
     driver.get(f'https://www.instagram.com/{target_username}/')
     time.sleep(5)
 
+    xpath = get_action_xpath(action_name)
     # 추천 부분 확인을 위해 친구 숫자 카운트
-    friend_count_element = driver.find_elements(By.XPATH, '//span[contains(@class, "html-span xdj266r x11i5rnm xat24cr x1mh8g0r xexx8yu x4uap5 x18d9i69 xkhd6sd x1hl2dhg x16tdsg8 x1vvkbs")]')
+    friend_count_element = driver.find_elements(By.XPATH, xpath)
     element = friend_count_element[2]
     if element.text.isdigit():
         friend_count = int(element.text)
@@ -155,7 +93,6 @@ def get_following(driver, target_username):
                 return set()
     else:
         friend_count = -1
-    #print(f"Following No: {friend_count}")
 
     time.sleep(5)
     following = list()
@@ -175,7 +112,7 @@ def get_following(driver, target_username):
                 break
         else:
             scroll_attempts = 0 # 높이가 변하면 시도 횟수 초기화
-    
+
 
     # 팔로워 수가 20보다 적으면 중복 제거하고 friend_count만큼만 살리기
     if friend_count > 0 and friend_count <= 20:
@@ -186,31 +123,11 @@ def get_following(driver, target_username):
                 unique_following.append(follow)
             if len(unique_following) == friend_count:
                 break
-        return set(unique_following) 
-        # if friend_count == -1: #친구수가 숫자로 표기되지 않는경우
-        #     return unique_following[:]
-        # else:
-        #     return unique_following[:friend_count]
+        return set(unique_following)
     else:
         # 20 이상일 시 세트로 변환 중복 제거 후 반환
         return set(following)
 
-'''
-# 맞팔로우하지 않는 사용자 출력
-def find_non_followers(username, password, target_username):
-    driver = webdriver.Chrome()
-    try:
-        insta_login(driver, username, password)
-        followers = get_followers(driver, target_username)
-        following = get_following(driver, target_username)
-
-        not_following_back = following - followers
-        print(f"{target_username}의 맞팔로우하지 않는 사용자:")
-        for user in not_following_back:
-            print(user)
-    finally:
-        driver.quit()
-'''
 
 # 최근 n개 게시물에서 좋아요를 한 사용자 목록 가져오기
 def get_likes(driver, contents_num, username):
